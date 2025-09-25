@@ -1,0 +1,24 @@
+{
+  "name": "습관형성 RPG",
+  "short_name": "HabitRPG",
+  "lang": "ko",
+  "description": "습관을 게임처럼 키울 수 있는 RPG 스타일 PWA",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0f172a",
+  "theme_color": "#38bdf8",
+  "icons": [
+    {
+      "src": "assets/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "assets/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

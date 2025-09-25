@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#38bdf8" />
+    <meta name="description" content="습관을 게임처럼 키워가는 RPG PWA" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <link rel="manifest" href="manifest.json" />
+    <link rel="apple-touch-icon" href="assets/icons/icon-192.png" />
+    <link rel="stylesheet" href="styles.css" />
+    <link
+      rel="preconnect"
+      href="https://fonts.googleapis.com"
+      crossorigin
+    />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <title>습관형성 RPG</title>
+  </head>
+  <body>
+    <div id="app" class="app-shell">
+      <header class="app-header">
+        <div class="status-bar" role="status">
+          <span id="connection-status" class="status-indicator">연결 확인 중...</span>
+          <button id="open-settings" class="icon-button" aria-label="설정 열기">⚙️</button>
+        </div>
+        <section class="domain-carousel" aria-label="도메인 진척도">
+          <button class="carousel-control" data-direction="prev" aria-label="이전 도메인">◀</button>
+          <div class="carousel-track" id="domain-track" tabindex="0"></div>
+          <button class="carousel-control" data-direction="next" aria-label="다음 도메인">▶</button>
+        </section>
+      </header>
+
+      <main class="app-main">
+        <nav class="quest-tabs" role="tablist" aria-label="퀘스트 보기">
+          <button class="tab-button active" role="tab" aria-selected="true" data-tab="today">오늘</button>
+          <button class="tab-button" role="tab" aria-selected="false" data-tab="tomorrow">내일</button>
+          <button class="tab-button" role="tab" aria-selected="false" data-tab="upcoming">다가올</button>
+        </nav>
+        <section id="quest-list" class="quest-list" role="tabpanel" aria-live="polite"></section>
+      </main>
+
+      <button id="add-quest" class="fab" aria-label="새 퀘스트 추가">＋</button>
+    </div>
+
+    <dialog id="quest-dialog">
+      <form id="quest-form" method="dialog">
+        <h2 id="quest-dialog-title">퀘스트 추가</h2>
+        <label class="field">
+          <span>제목</span>
+          <input type="text" name="title" required maxlength="80" />
+        </label>
+        <label class="field">
+          <span>XP</span>
+          <input type="number" name="xp" min="1" step="1" required />
+        </label>
+        <label class="field">
+          <span>도메인</span>
+          <select name="domain_name" required></select>
+        </label>
+        <label class="field">
+          <span>목표일</span>
+          <input type="date" name="date" required />
+        </label>
+        <label class="field checkbox">
+          <input type="checkbox" name="is_daily" />
+          <span>매일 반복</span>
+        </label>
+        <label class="field">
+          <span>메모</span>
+          <textarea name="notes" rows="3" placeholder="진행 메모를 남겨보세요"></textarea>
+        </label>
+        <menu class="dialog-actions">
+          <button type="reset" value="cancel">취소</button>
+          <button type="submit" class="primary">저장</button>
+        </menu>
+        <input type="hidden" name="id" />
+      </form>
+    </dialog>
+
+    <dialog id="settings-dialog">
+      <form id="settings-form" method="dialog">
+        <h2>설정</h2>
+        <p class="settings-help">
+          레벨 기준과 의지 XP 증가는 백엔드와 동기화됩니다.
+        </p>
+        <label class="field">
+          <span>의지 XP (퀘스트 1개 완료 시)</span>
+          <input type="number" name="willpower_xp_per_any_quest" min="0" step="1" />
+        </label>
+        <label class="field">
+          <span>API 베이스 URL</span>
+          <input type="url" name="api_base_url" placeholder="http://localhost:4000" />
+        </label>
+        <label class="field">
+          <span>레벨 임계값 (쉼표로 구분)</span>
+          <textarea name="default_level_thresholds" rows="3"></textarea>
+        </label>
+        <label class="field">
+          <span>보상 목록(JSON)</span>
+          <textarea name="default_levelup_rewards" rows="4"></textarea>
+        </label>
+        <menu class="dialog-actions">
+          <button type="reset" value="cancel">닫기</button>
+          <button type="submit" class="primary">업데이트</button>
+        </menu>
+      </form>
+    </dialog>
+
+    <section id="reward-toast" class="reward-toast" hidden aria-live="assertive"></section>
+
+    <template id="quest-card-template">
+      <article class="quest-card">
+        <div class="quest-main">
+          <h3 class="quest-title"></h3>
+          <p class="quest-meta"></p>
+        </div>
+        <div class="quest-actions">
+          <button class="action complete" data-action="complete">완료</button>
+          <button class="action postpone" data-action="postpone">미루기</button>
+          <button class="action edit" data-action="edit">편집</button>
+          <button class="action delete" data-action="delete">삭제</button>
+        </div>
+      </article>
+    </template>
+
+    <audio id="sound-reward-chime" src="assets/sounds/reward-chime.wav" preload="auto"></audio>
+    <audio id="sound-reward-fanfare" src="assets/sounds/reward-fanfare.wav" preload="auto"></audio>
+
+    <script src="app.js" defer></script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker
+            .register('sw.js')
+            .then(() => console.log('서비스 워커 등록 완료'))
+            .catch((error) => console.error('서비스 워커 등록 실패', error));
+        });
+      }
+    </script>
+  </body>
+</html>
