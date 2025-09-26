@@ -1,5 +1,5 @@
 {
-  "name": "habit-rpg-backend",
+  "name": "habit-rpg",
   "version": "1.0.0",
   "description": "Backend API for Habit Formation RPG PWA",
   "main": "server.js",
